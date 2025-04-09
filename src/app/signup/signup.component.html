@@ -1,0 +1,58 @@
+<div class="signup-container">
+  <mat-card class="signup-card">
+    <h2>Sign Up</h2>
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" />
+        <mat-error *ngIf="submitted && signupForm.controls.name.errors?.['required']">
+          Name is required.
+        </mat-error>
+        <mat-error *ngIf="submitted && signupForm.controls.name.errors?.['minlength']">
+          Minimum 3 characters.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" />
+        <mat-error *ngIf="submitted && signupForm.controls.email.errors?.['required']">
+          Email is required.
+        </mat-error>
+        <mat-error *ngIf="submitted && signupForm.controls.email.errors?.['email']">
+          Invalid email format.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" />
+        <mat-error *ngIf="submitted && signupForm.controls.password.errors?.['required']">
+          Password is required.
+        </mat-error>
+        <mat-error *ngIf="submitted && signupForm.controls.password.errors?.['minlength']">
+          Minimum 6 characters.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirm Password</mat-label>
+        <input matInput type="password" formControlName="confirmPassword" />
+        <mat-error *ngIf="submitted && signupForm.controls.confirmPassword.errors?.['required']">
+          Confirm your password.
+        </mat-error>
+        <mat-error *ngIf="submitted && signupForm.errors?.['passwordMismatch']">
+          Passwords do not match.
+        </mat-error>
+      </mat-form-field>
+
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+      <button mat-raised-button color="primary" class="full-width" type="submit">
+        Sign Up
+      </button>
+    </form>
+  </mat-card>
+</div>
