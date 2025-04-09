@@ -17,8 +17,6 @@ import { LoginComponent } from './login/login.component';
 import { SignupComponent } from './signup/signup.component';
 import { ProductsComponent } from './products/products.component';
 import { CatgoriesComponent } from './catgories/catgories.component';
-import { MproductComponent } from './mproduct/mproduct.component';
-import { McatgoriesComponent } from './mcatgories/mcatgories.component';
 import { UsersComponent } from './users/users.component';
 import { UploadComponent } from './upload/upload.component';
 import { UserlistComponent } from './userlist/userlist.component';
@@ -30,8 +28,6 @@ const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
   { path: 'user', component: UsersComponent },
-  { path: 'mcatgories', component: McatgoriesComponent },
-  { path: 'mproduct', component: MproductComponent },
   { path: 'userlist', component: UserlistComponent },
 
   // Add more routes here as needed
@@ -43,8 +39,6 @@ const routes: Routes = [
     SignupComponent,
     ProductsComponent,
     CatgoriesComponent,
-    MproductComponent,
-    McatgoriesComponent,
     UsersComponent,
     UploadComponent,
     UserlistComponent,
