@@ -46,7 +46,7 @@ currentPage = 0;
 onPageChange(event: PageEvent) {
   this.pageSize = event.pageSize;
   this.currentPage = event.pageIndex;
-  this.fetchDataFromAPI(); // fetch with new page settings
+  this.fetchDataFromAPI();
 }
 
   ngAfterViewInit(): void {
@@ -56,42 +56,37 @@ onPageChange(event: PageEvent) {
       this.fetchDataFromAPI();
     });
   
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    //this.dataSource.paginator = this.paginator;
+   // this.dataSource.sort = this.sort;
   }
   
   fetchDataFromAPI(): void {
-
-    const pageIndex = this.paginator?.pageIndex ?? 0;
-    const pageSize = this.paginator?.pageSize ?? 5;
+    const pageIndex = this.currentPage;
+    const pageSize = this.pageSize;
     const sortActive = this.sort?.active ?? 'id';
     const sortDirection = this.sort?.direction ?? 'asc';
     const filter = this.dataSource.filter || '';
-
-    
+  
     const params = new HttpParams()
-    .set('page', (pageIndex + 1).toString())
-    .set('limit', pageSize.toString())
-    .set('sortBy', sortActive)
-    .set('sort', sortDirection)
-    .set('search', filter);
-
-  this.http.get<ProductApiResponse>('http://localhost:3000/api/catgories', { 
-    observe: 'response',  
-    params: params
-  })
-  .subscribe({
-    next: (response: HttpResponse<ProductApiResponse>) => {
-      const data = response.body?.data || [];
-      console.log("-------------------", data);
-      this.dataSource.data = data;
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
-    },
-    error: (err) => console.error('API fetch error:', err)
-  });
-
+      .set('page', (pageIndex + 1).toString())
+      .set('limit', pageSize.toString())
+      .set('sortBy', sortActive)
+      .set('sort', sortDirection)
+      .set('search', filter);
+  
+    this.http.get<ProductApiResponse>('http://localhost:3000/api/catgories', { 
+      observe: 'response',
+      params: params
+    }).subscribe({
+      next: (response: HttpResponse<ProductApiResponse>) => {
+        const res = response.body!;
+        this.dataSource.data = res.data;
+        this.totalItems = response.body?.total || 0;;
+      },
+      error: (err) => console.error('API fetch error:', err)
+    });
   }
+  
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
     this.dataSource.filter = filterValue;
