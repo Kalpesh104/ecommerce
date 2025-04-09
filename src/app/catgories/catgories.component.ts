@@ -2,8 +2,8 @@ import { AfterViewInit, Component, ViewChild, OnInit } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { HttpClient } from '@angular/common/http';
 import { FileService } from './file.service';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 
 export interface UserData {
   id: string;
@@ -30,27 +30,51 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.fetchDataFromAPI();
   }
-
   ngAfterViewInit(): void {
+    this.paginator.page.subscribe(() => this.fetchDataFromAPI());
+    this.sort.sortChange.subscribe(() => {
+      this.paginator.pageIndex = 0; // reset page index on sort
+      this.fetchDataFromAPI();
+    });
+  
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
-
+  
   fetchDataFromAPI(): void {
-    this.http.get<UserData[]>('http://localhost:3000/api/catgories').subscribe({
-      next: (data) => {
-        this.dataSource.data = data;
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
-      },
-      error: (err) => console.error('API fetch error:', err)
-    });
-  }
 
+    const pageIndex = this.paginator?.pageIndex ?? 0;
+    const pageSize = this.paginator?.pageSize ?? 5;
+    const sortActive = this.sort?.active ?? 'id';
+    const sortDirection = this.sort?.direction ?? 'asc';
+    const filter = this.dataSource.filter || '';
+
+    
+  const params = {
+    _page: (pageIndex + 1).toString(),
+    _limit: pageSize.toString(),
+    _sort: sortActive,
+    _order: sortDirection,
+    q: filter
+  };
+  this.http.get<UserData[]>('http://localhost:3000/api/catgories', { observe: 'response' })
+  .subscribe({
+    next: (response: HttpResponse<UserData[]>) => {
+      const data = response.body || [];
+      this.dataSource.data = data;
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      // You can now also access: response.headers, response.status, etc.
+    },
+    error: (err) => console.error('API fetch error:', err)
+  });
+  }
   applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.dataSource.filter = filterValue;
+  
+    this.paginator.pageIndex = 0;
+    this.fetchDataFromAPI();
   }
 
   onFileSelected(event: Event) {
@@ -71,13 +95,16 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
   }
 
   download() {
-    this.fileService.downloadFile().subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sample.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
+    this.http.get('http://localhost:3000/download-products-report', { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const a = document.createElement('a');
+        const url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = 'categories-file.xlsx'; // or the actual file name you expect
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Download failed', err)
     });
   }
 
