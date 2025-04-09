@@ -1,42 +1,49 @@
-<h2>Product Management</h2>
+<h2 class="section-title">Product Management</h2>
 
-<form [formGroup]="userForm" (ngSubmit)="submitForm()">
-  <input formControlName="name" placeholder="Name" />
-  <div *ngIf="userForm.controls['name'].invalid && userForm.controls['name'].touched">
-    <small *ngIf="userForm.controls['name'].errors?.['required']">Name is required.</small>
-    <small *ngIf="userForm.controls['name'].errors?.['minlength']">Min 3 characters.</small>
-  </div>
+<div class="form-card">
+  <form [formGroup]="userForm" (ngSubmit)="submitForm()">
+    <!-- Product Name -->
+    <div class="form-field">
+      <label>Name</label>
+      <input formControlName="name" placeholder="Enter product name" />
+      <div class="error" *ngIf="userForm.controls['name'].invalid && userForm.controls['name'].touched">
+        <small *ngIf="userForm.controls['name'].errors?.['required']">Name is required.</small>
+        <small *ngIf="userForm.controls['name'].errors?.['minlength']">Min 3 characters.</small>
+      </div>
+    </div>
 
-  <input formControlName="email" placeholder="Email" />
-  <div *ngIf="userForm.controls['email'].invalid && userForm.controls['email'].touched">
-    <small *ngIf="userForm.controls['email'].errors?.['required']">Email is required.</small>
-    <small *ngIf="userForm.controls['email'].errors?.['email']">Invalid email.</small>
-  </div>
+    <!-- Product Email -->
+    <div class="form-field">
+      <label>Email</label>
+      <input formControlName="email" placeholder="Enter email" />
+      <div class="error" *ngIf="userForm.controls['email'].invalid && userForm.controls['email'].touched">
+        <small *ngIf="userForm.controls['email'].errors?.['required']">Email is required.</small>
+        <small *ngIf="userForm.controls['email'].errors?.['email']">Invalid email.</small>
+      </div>
+    </div>
 
-  <input type="file" (change)="onFileSelected($event)" />
-  <div *ngIf="userForm.value.fileName">
-    Selected: {{ userForm.value.fileName }}
-  </div>
+    <!-- Action Buttons -->
+    <div class="form-actions">
+      <button type="submit">{{ editing ? 'Update Product' : 'Add Product' }}</button>
+      <button type="button" (click)="resetForm()" class="secondary">Clear</button>
+    </div>
+  </form>
+</div>
 
-  <button type="submit">{{ editing ? 'Update' : 'Add' }}</button>
-  <button type="button" (click)="resetForm()">Clear</button>
-</form>
-
-<input [(ngModel)]="searchTerm" placeholder="Search..." class="search-box" />
-
-<ul>
+<!-- Product List -->
+<ul class="product-list">
   <li *ngFor="let user of filteredUsers">
-    {{ user.name }} - {{ user.email }}
-    <span *ngIf="user.fileName">
-      | <a [href]="user.fileData" [download]="user.fileName">Download File</a>
-    </span>
-    <button (click)="edit(user)">Edit</button>
-    <button (click)="delete(user.id)">Delete</button>
+    <div class="product-item">
+      <div class="product-info">
+        <strong>{{ user.name }}</strong> <span>- {{ user.email }}</span>
+        <span *ngIf="user.fileName" class="file-link">
+          | <a [href]="user.fileData" [download]="user.fileName">Download File</a>
+        </span>
+      </div>
+      <div class="product-actions">
+        <button (click)="edit(user)">Edit</button>
+        <button (click)="delete(user.id)" class="danger">Delete</button>
+      </div>
+    </div>
   </li>
 </ul>
-
-<div class="pagination-controls">
-  <button (click)="prevPage()" [disabled]="page === 1">Prev</button>
-  Page {{ page }}
-  <button (click)="nextPage()" [disabled]="endIndex() >= filteredUsers.length">Next</button>
-</div>
