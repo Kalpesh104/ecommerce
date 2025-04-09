@@ -4,6 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { FileService } from './file.service';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { PageEvent } from '@angular/material/paginator';
 
 export interface UserData {
   id: number;
@@ -37,6 +38,17 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.fetchDataFromAPI();
   }
+  totalItems = 0;
+pageSize = 5;
+currentPage = 0;
+
+
+onPageChange(event: PageEvent) {
+  this.pageSize = event.pageSize;
+  this.currentPage = event.pageIndex;
+  this.fetchDataFromAPI(); // fetch with new page settings
+}
+
   ngAfterViewInit(): void {
     this.paginator.page.subscribe(() => this.fetchDataFromAPI());
     this.sort.sortChange.subscribe(() => {
@@ -58,11 +70,11 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
 
     
     const params = new HttpParams()
-    .set('_page', (pageIndex + 1).toString())
-    .set('_limit', pageSize.toString())
-    .set('_sort', sortActive)
-    .set('_order', sortDirection)
-    .set('q', filter);
+    .set('page', (pageIndex + 1).toString())
+    .set('limit', pageSize.toString())
+    .set('sortBy', sortActive)
+    .set('sort', sortDirection)
+    .set('search', filter);
 
   this.http.get<ProductApiResponse>('http://localhost:3000/api/catgories', { 
     observe: 'response',  

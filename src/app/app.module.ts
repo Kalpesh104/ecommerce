@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { PageEvent } from '@angular/material/paginator';
 
 import { RouterModule, Routes } from '@angular/router';
 import {AfterViewInit, Component, ViewChild} from '@angular/core';
@@ -46,6 +47,7 @@ const routes: Routes = [
   imports: [
     BrowserModule,
     MatFormFieldModule,
+    MatPaginatorModule,
     AppRoutingModule,MatPaginatorModule,
     BrowserModule, ReactiveFormsModule, FormsModule, HttpClientModule,
     MatInputModule,
