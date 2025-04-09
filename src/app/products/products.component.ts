@@ -12,6 +12,12 @@ export interface UserData {
   price: string;
   categoryId: string;
 }
+interface ProductApiResponse {
+  data: UserData[];
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+}
 
 @Component({
   selector: 'app-products',
@@ -59,14 +65,14 @@ export class ProductsComponent implements AfterViewInit {
     _order: sortDirection,
     q: filter
   };
-  this.http.get<UserData[]>('http://localhost:3000/api/products', { observe: 'response' })
+  this.http.get<ProductApiResponse>('http://localhost:3000/api/products', { observe: 'response' })
   .subscribe({
-    next: (response: HttpResponse<UserData[]>) => {
-      const data = response.body || [];
+    next: (response: HttpResponse<ProductApiResponse>) => {
+      console.log('Response:', response);
+      const data = response.body?.data || [];
       this.dataSource.data = data;
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
-      // You can now also access: response.headers, response.status, etc.
     },
     error: (err) => console.error('API fetch error:', err)
   });
@@ -90,7 +96,7 @@ export class ProductsComponent implements AfterViewInit {
     const formData = new FormData();
     formData.append('excelFile', this.selectedFile);
 
-    this.http.post('http://localhost:3000/upload', formData).subscribe({
+    this.http.post('http://localhost:3000/upload-products', formData).subscribe({
       next: (res) => console.log('Upload success', res),
       error: (err) => console.error('Upload error', err)
     });
