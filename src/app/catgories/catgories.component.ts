@@ -100,7 +100,33 @@ export class CatgoriesComponent implements  AfterViewInit {
     });
   }
 
-  
+  newUser: Partial<UserData> = { name: '', progress: '', fruit: '' };
+
+addOrUpdateUser() {
+  if (this.newUser.id) {
+    // Update
+    const index = this.dataSource.data.findIndex(u => u.id === this.newUser.id);
+    if (index !== -1) {
+      this.dataSource.data[index] = { ...this.newUser } as UserData;
+      this.dataSource._updateChangeSubscription();
+    }
+  } else {
+    // Add
+    const newId = (Math.max(...this.dataSource.data.map(u => +u.id), 0) + 1).toString();
+    this.dataSource.data.push({ ...this.newUser, id: newId } as UserData);
+    this.dataSource._updateChangeSubscription();
+  }
+  this.newUser = { name: '', progress: '', fruit: '' }; // Reset form
+}
+
+editUser(user: UserData) {
+  this.newUser = { ...user }; // Populate form with existing data
+}
+
+deleteUser(id: string) {
+  this.dataSource.data = this.dataSource.data.filter(u => u.id !== id);
+  this.dataSource._updateChangeSubscription();
+}
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
