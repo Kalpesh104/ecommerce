@@ -95,7 +95,7 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
   }
 
   download() {
-    this.http.get('http://localhost:3000/download-products-report', { responseType: 'blob' }).subscribe({
+    this.http.get('http://localhost:3000/download-catgories-report', { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const a = document.createElement('a');
         const url = window.URL.createObjectURL(blob);

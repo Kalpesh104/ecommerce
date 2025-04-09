@@ -1,87 +1,84 @@
-import {AfterViewInit, Component, ViewChild} from '@angular/core';
-import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
-import {MatSort, MatSortModule} from '@angular/material/sort';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import { HttpClient } from '@angular/common/http';
-
-import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, ViewChild, OnInit } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 import { FileService } from '../catgories/file.service';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 
 export interface UserData {
   id: string;
   name: string;
-  progress: string;
-  fruit: string;
+  image: string;
+  price: string;
+  categoryId: string;
 }
-
-/** Constants used to fill up our data base. */
-const FRUITS: string[] = [
-  'blueberry',
-  'lychee',
-  'kiwi',
-  'mango',
-  'peach',
-  'lime',
-  'pomegranate',
-  'pineapple',
-];
-const NAMES: string[] = [
-  'Maia',
-  'Asher',
-  'Olivia',
-  'Atticus',
-  'Amelia',
-  'Jack',
-  'Charlotte',
-  'Theodore',
-  'Isla',
-  'Oliver',
-  'Isabella',
-  'Jasper',
-  'Cora',
-  'Levi',
-  'Violet',
-  'Arthur',
-  'Mia',
-  'Thomas',
-  'Elizabeth',
-];
-
-
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.css']
 })
-export class ProductsComponent implements  AfterViewInit {
-  displayedColumns: string[] = ['id', 'name', 'progress', 'fruit'];
-  dataSource: MatTableDataSource<UserData>;
+export class ProductsComponent implements AfterViewInit {
+  displayedColumns: string[] = ['uniqueId', 'name', 'image', 'price', 'category', 'actions'];
+  dataSource = new MatTableDataSource<UserData>();
+  selectedFile!: File;
+  newUser: Partial<UserData> = { name: '', price: '' };
 
-  
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private fileService: FileService,private http: HttpClient) {
-    // Create 100 users
-    const users = Array.from({length: 100}, (_, k) => createNewUser(k + 1));
+  constructor(private fileService: FileService, private http: HttpClient) {}
 
-    // Assign the data to the data source for the table to render
-    this.dataSource = new MatTableDataSource(users);
+  ngOnInit(): void {
+    this.fetchDataFromAPI();
   }
-  onUpload() {
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-  
-    this.http.post('http://localhost:3000/upload', formData).subscribe({
-      next: (res) => console.log('Upload success', res),
-      error: (err) => console.error('Upload error', err)
+  ngAfterViewInit(): void {
+    this.paginator.page.subscribe(() => this.fetchDataFromAPI());
+    this.sort.sortChange.subscribe(() => {
+      this.paginator.pageIndex = 0; // reset page index on sort
+      this.fetchDataFromAPI();
     });
-  }
-  selectedFile!: File;
   
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+  
+  fetchDataFromAPI(): void {
+
+    const pageIndex = this.paginator?.pageIndex ?? 0;
+    const pageSize = this.paginator?.pageSize ?? 5;
+    const sortActive = this.sort?.active ?? 'id';
+    const sortDirection = this.sort?.direction ?? 'asc';
+    const filter = this.dataSource.filter || '';
+
+    
+  const params = {
+    _page: (pageIndex + 1).toString(),
+    _limit: pageSize.toString(),
+    _sort: sortActive,
+    _order: sortDirection,
+    q: filter
+  };
+  this.http.get<UserData[]>('http://localhost:3000/api/products', { observe: 'response' })
+  .subscribe({
+    next: (response: HttpResponse<UserData[]>) => {
+      const data = response.body || [];
+      this.dataSource.data = data;
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      // You can now also access: response.headers, response.status, etc.
+    },
+    error: (err) => console.error('API fetch error:', err)
+  });
+  }
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.dataSource.filter = filterValue;
+  
+    this.paginator.pageIndex = 0;
+    this.fetchDataFromAPI();
+  }
+
   onFileSelected(event: Event) {
     const fileInput = event.target as HTMLInputElement;
     if (fileInput.files?.length) {
@@ -89,85 +86,72 @@ export class ProductsComponent implements  AfterViewInit {
     }
   }
 
-  download() {
-    this.fileService.downloadFile().subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sample.pdf'; // You can change the filename
-      a.click();
-      window.URL.revokeObjectURL(url);
+  onUpload() {
+    const formData = new FormData();
+    formData.append('excelFile', this.selectedFile);
+
+    this.http.post('http://localhost:3000/upload', formData).subscribe({
+      next: (res) => console.log('Upload success', res),
+      error: (err) => console.error('Upload error', err)
     });
   }
 
-  newUser: Partial<UserData> = { name: '', progress: '', fruit: '' };
+  download() {
+    this.http.get('http://localhost:3000/download-products-report', { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const a = document.createElement('a');
+        const url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = 'product-file.xlsx'; // or the actual file name you expect
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Download failed', err)
+    });
+  }
 
   addOrUpdateUser() {
     if (this.newUser.id) {
-      // Update existing user
-      const index = this.dataSource.data.findIndex(u => u.id === this.newUser.id);
-      if (index !== -1) {
-        this.dataSource.data[index] = { ...this.newUser } as UserData;
-        this.dataSource._updateChangeSubscription();
-      }
+      // Update category
+      this.http.put(`http://localhost:3000/api/products/${this.newUser.id}`, this.newUser).subscribe({
+        next: () => {
+          this.fetchDataFromAPI();
+          this.resetForm();
+        },
+        error: (err) => console.error('Update error:', err)
+      });
     } else {
-      // Clear all old data and add new user only
-      const newId = '1'; // Start from ID 1
-      const newUser: UserData = {
-        id: newId,
-        name: this.newUser.name || '',
-        progress: this.newUser.progress || '',
-        fruit: this.newUser.fruit || ''
-      };
-      this.dataSource.data = [newUser]; // Replace existing data
-      this.dataSource._updateChangeSubscription();
+      // Add new category
+      this.http.post('http://localhost:3000/api/products', this.newUser).subscribe({
+        next: () => {
+          this.fetchDataFromAPI();
+          this.resetForm();
+        },
+        error: (err) => console.error('Add error:', err)
+      });
     }
-  
-    this.resetForm(); // Clear form after submit
   }
   
-  
-  editUser(user: UserData) {
-    this.newUser = { ...user }; // Populate form with selected row
-  }
-  
+
   deleteUser(id: string) {
-    this.dataSource.data = this.dataSource.data.filter(user => user.id !== id);
-    this.dataSource._updateChangeSubscription(); // Refresh table
+    this.http.delete(`http://localhost:3000/api/products/${id}`).subscribe({
+      next: () => {
+        this.fetchDataFromAPI();
+      },
+      error: (err) => console.error('Delete error:', err)
+    });
   }
-  
+
+  editUser(user: UserData) {
+    this.newUser = { ...user };
+  }
+
   resetForm() {
-    this.newUser = { name: '', progress: '', fruit: '' };
-  }
-  
-  ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-  }
-
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+    this.newUser = {
+      name: '',
+      price: '',
+      image: '',
+      categoryId: ''
+    };
   }
 }
-
-/** Builds and returns a new User. */
-function createNewUser(id: number): UserData {
-  const name =
-    NAMES[Math.round(Math.random() * (NAMES.length - 1))] +
-    ' ' +
-    NAMES[Math.round(Math.random() * (NAMES.length - 1))].charAt(0) +
-    '.';
-
-  return {
-    id: id.toString(),
-    name: name,
-    progress: Math.round(Math.random() * 100).toString(),
-    fruit: FRUITS[Math.round(Math.random() * (FRUITS.length - 1))],
-  };
-}
-
