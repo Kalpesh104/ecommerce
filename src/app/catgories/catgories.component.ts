@@ -7,8 +7,8 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 
 export interface UserData {
   id: string;
-  catgoriesName: string;
-  catgoriesPrice: string;
+  name: string;
+  price: string;
 }
 
 @Component({
@@ -17,10 +17,10 @@ export interface UserData {
   styleUrls: ['./catgories.component.css']
 })
 export class CatgoriesComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['id', 'catgoriesName', 'catgoriesPrice', 'actions'];
+  displayedColumns: string[] = ['id', 'name', 'price', 'actions'];
   dataSource = new MatTableDataSource<UserData>();
   selectedFile!: File;
-  newUser: Partial<UserData> = { catgoriesName: '', catgoriesPrice: '' };
+  newUser: Partial<UserData> = { name: '', price: '' };
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -86,7 +86,7 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
 
   onUpload() {
     const formData = new FormData();
-    formData.append('file', this.selectedFile);
+    formData.append('excelFile', this.selectedFile);
 
     this.http.post('http://localhost:3000/upload', formData).subscribe({
       next: (res) => console.log('Upload success', res),
@@ -145,6 +145,6 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
   }
 
   resetForm() {
-    this.newUser = { catgoriesName: '', catgoriesPrice: '' };
+    this.newUser = { name: '', price: '' };
   }
 }
