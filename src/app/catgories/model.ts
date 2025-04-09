@@ -4,4 +4,6 @@ export interface User {
     email: string;
     fileName?: string;
     fileData?: string;
+    catgoriesName: string;
+    catgoriesPrice: string;
   }
