@@ -6,9 +6,16 @@ import { FileService } from './file.service';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 
 export interface UserData {
-  id: string;
+  id: number;
   name: string;
-  price: string;
+  price?: string;
+}
+
+export interface ProductApiResponse {
+  data: UserData[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 @Component({
@@ -50,24 +57,28 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
     const filter = this.dataSource.filter || '';
 
     
-  const params = {
-    _page: (pageIndex + 1).toString(),
-    _limit: pageSize.toString(),
-    _sort: sortActive,
-    _order: sortDirection,
-    q: filter
-  };
-  this.http.get<UserData[]>('http://localhost:3000/api/catgories', { observe: 'response' })
+    const params = new HttpParams()
+    .set('_page', (pageIndex + 1).toString())
+    .set('_limit', pageSize.toString())
+    .set('_sort', sortActive)
+    .set('_order', sortDirection)
+    .set('q', filter);
+
+  this.http.get<ProductApiResponse>('http://localhost:3000/api/catgories', { 
+    observe: 'response',  
+    params: params
+  })
   .subscribe({
-    next: (response: HttpResponse<UserData[]>) => {
-      const data = response.body || [];
+    next: (response: HttpResponse<ProductApiResponse>) => {
+      const data = response.body?.data || [];
+      console.log("-------------------", data);
       this.dataSource.data = data;
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
-      // You can now also access: response.headers, response.status, etc.
     },
     error: (err) => console.error('API fetch error:', err)
   });
+
   }
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
@@ -145,6 +156,6 @@ export class CatgoriesComponent implements OnInit, AfterViewInit {
   }
 
   resetForm() {
-    this.newUser = { name: '', price: '' };
+     this.newUser = { name: '', price: '' };
   }
 }
