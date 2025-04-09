@@ -92,6 +92,7 @@ onPageChange(event: PageEvent) {
     this.dataSource.filter = filterValue;
   
     this.paginator.pageIndex = 0;
+    this.currentPage=0;
     this.fetchDataFromAPI();
   }
 
